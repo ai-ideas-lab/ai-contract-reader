@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  contracts Contract[]
+  analyses  Analysis[]
+  
+  @@map("users")
+}
+
+model Contract {
+  id          String   @id @default(cuid())
+  title       String
+  type        ContractType
+  fileUrl     String?
+  filePath    String?
+  fileSize    Int?
+  fileName    String?
+  fileContent String?
+  
+  extractedData Json?
+  
+  userId      String
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  analyses Analysis[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("contracts")
+}
+
+model Analysis {
+  id           String   @id @default(cuid())
+  contractId   String
+  contract     Contract  @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  
+  analysisType AnalysisType
+  summary      String
+  keyTerms     Json?
+  risks        Json?
+  obligations  Json?
+  recommendations Json?
+  
+  confidence   Float?
+  
+  userId       String
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@map("analyses")
+}
+
+enum ContractType {
+  RENTAL_AGREEMENT
+  EMPLOYMENT_CONTRACT
+  SERVICE_AGREEMENT
+  SALES_CONTRACT
+  PARTNERSHIP_AGREEMENT
+  NDA
+  OTHER
+}
+
+enum AnalysisType {
+  COMPREHENSIVE
+  KEY_TERMS
+  RISK_ASSESSMENT
+  OBLIGATION_REVIEW
+  COMPLIANCE_CHECK
+}
